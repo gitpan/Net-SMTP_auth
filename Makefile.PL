@@ -11,6 +11,7 @@ WriteMakefile(
                              Net::SMTP => 2.00,
                              MIME::Base64 => 2.00,
                              Digest::HMAC_MD5 => 1.00,
+			     Authen::SASL => 2.03,
 			   },
 
 );

@@ -7,7 +7,7 @@
 
 # Net::SMTP_auth is a small extension to G. Barr's Net::SMTP
 # to authenticate to an SMTP server using one of the AUTH
-# methods PLAIN, LOGIN or CRAM-MD5 (see RFC2554 for details).
+# methods provided by Authen::SASL (see RFC2554 for details).
 # This module can be expanded and is a very first implementation.
 
 package Net::SMTP_auth;
@@ -24,14 +24,16 @@ use Net::Config;
 use Net::SMTP;
 use MIME::Base64;
 use Digest::HMAC_MD5 qw(hmac_md5_hex);
+use Authen::SASL;
 
-$VERSION = "0.05";
+$VERSION = "0.06";
 
 @ISA = qw(Net::SMTP);
 
 # all other method taken from Net::SMTP
 
 sub auth_types {
+  @_ == 1 or croak 'usage: $pop3->auth_types()';
   my $me = shift;
 
   if (exists ${*$me}{'net_smtp_esmtp'}) {
@@ -48,63 +50,41 @@ sub auth_types {
 
 
 sub auth {
-  my $me = shift;
-  my $auth_type = shift ||
-       carp 'Net::SMTP_auth: missing argument "auth_type" to method "auth"';
-  my $user = shift;
-  my $pass = shift;
+  @_ == 4 or croak 'usage: $smtp->auth( AUTH, USER, PASS )';
+  my ($me, $auth, $user, $pass) = @_;
 
-  ## go for auth login
-  if (uc($auth_type) eq "LOGIN") {
-    $me->_AUTH("LOGIN");
-    if ( $me->code() == 334 ) {
-      my $encoded_user = encode_base64($user); chomp $encoded_user;
-      $me->command($encoded_user)->response();
-      if ( $me->code() == 334 ) {
-        my $encoded_pass = encode_base64($pass); chomp $encoded_pass;
-	$me->command($encoded_pass)->response(); 
-        if ( $me->code() == 235 ) {
-	  return 1;
-	}
+  my $sasl = Authen::SASL->new(
+			       mechanism => uc($auth),
+			       callback => {
+					    authname => $user,
+					    user     => $user,
+					    pass     => $pass,
+					   },
+			      );
+  return unless $sasl;
+  my $host = ${*$me}{'net_smtp_host'};
+  my $conn = $sasl->client_new("smtp", $host);#, "noplaintext noanonymous");
+
+  $me->_AUTH($auth) or return;
+
+  if ( $me->code() == 334 ) {
+
+    if (my $initial = $conn->client_start)
+      {
+	$me->command(encode_base64($initial, ''))->response();
+	return 1 if $me->code() == 235;
       }
-    }
 
-    return;
-
-  ## go for auth cram-md5
-  } elsif (uc($auth_type) eq "CRAM-MD5") { 
-    $me->_AUTH("CRAM-MD5");
-    if ( $me->code() == 334 ) {
-      my $stamp = $me->message;
-      my $hmac = hmac_md5_hex(decode_base64($stamp), $pass);
-      my $answer = encode_base64($user . " " . $hmac); $answer =~ s/\n//g;
-      $me->command($answer)->response();
-      if ( $me->code() == 235 ) {
-	return 1;
+    while ( $me->code() == 334 )
+      {
+	my $message = decode_base64($me->message());
+	my $return = $conn->client_step($message);
+	$me->command(encode_base64($return, ''))->response();
+	return 1 if $me->code() == 235;
+	return   if $me->code() == 535;
       }
-    }
 
-    return;
-
-  ## go for auth plain
-  } elsif (uc($auth_type) eq "PLAIN") {
-    $me->_AUTH("PLAIN");
-    if ( $me->code() == 334 ) {
-      my $string = encode_base64("\000$user\000$pass"); $string =~ s/\n//g;
-      $me->command($string)->response();
-      if ( $me->code() == 235 ) {
-	return 1;
-      }
-    }
-
-    return;
-
-  ## other auth methods not supported
-  } else {
-    carp "Net::SMTP_auth: authentication type \"$auth_type\" not supported";
-    return;
   }
-
 }
 
 
