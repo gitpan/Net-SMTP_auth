@@ -6,6 +6,9 @@ modify it under the same terms as Perl itself.
 Note: This version requires Authen::SASL. If you want to want to go
 without, use version Net::SMTP_auth 0.05.
 
+FURTHER NOTE: Net::SMTP can do authentication by itself (with a 
+different Syntax)
+
 Can someone please provide me with a SMTP account on a 
 maschine using DIGEST-MD5 or NTLM for testing?
 

@@ -8,7 +8,7 @@ WriteMakefile(
     'ABSTRACT'          => 'SMTP_AUTH wrapper for Net::SMTP (rfc2554)',
     'VERSION_FROM'	=> 'SMTP_auth.pm', # finds $VERSION
     'PREREQ_PM'		=> {
-                             Net::SMTP => 2.00,
+                             Net::SMTP => 2.26,
                              MIME::Base64 => 2.00,
                              Digest::HMAC_MD5 => 1.00,
 			     Authen::SASL => 2.03,

@@ -26,7 +26,7 @@ use MIME::Base64;
 use Digest::HMAC_MD5 qw(hmac_md5_hex);
 use Authen::SASL;
 
-$VERSION = "0.06";
+$VERSION = "0.07";
 
 @ISA = qw(Net::SMTP);
 
@@ -88,7 +88,7 @@ sub auth {
 }
 
 
-sub _AUTH { shift->command("AUTH", @_)->response()  == CMD_OK } 
+sub _AUTH { shift->command("AUTH", @_)->response()  == CMD_MORE }
 
 1;
 

@@ -1,5 +1,11 @@
 Revision history for Perl extension Net::SMTP_auth.
 
+0.07  Don Aug  7 18:23:51 CEST 2003
+        - After upgraing Net:SMTP to version 2.26 I noticed that
+          authentication was broken (the response of AUTH does not equal
+          CMD_OK anymore but CMD_MORE).
+        - PLEASE NOTE: Net::SMTP can handle authentication by its own.
+
 0.06  Fre Jul 11 18:36:37 CEST 2003
 	- changed MIME::Base64 function calls
         - changed authentication to use Authen::SASL instead of
