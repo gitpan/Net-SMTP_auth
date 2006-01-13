@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SMTP_auth.
 
+0.08  Fri Jan 13 12:12:57 CET 2006
+        - added authentication via NTLM (James Fryman)
+
 0.07  Don Aug  7 18:23:51 CEST 2003
         - After upgraing Net:SMTP to version 2.26 I noticed that
           authentication was broken (the response of AUTH does not equal
